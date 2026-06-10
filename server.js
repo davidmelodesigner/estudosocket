@@ -22,7 +22,7 @@ wss.on("connection", (ws) => {
         const data = JSON.parse(msg.toString());
 
         if(data.message=="sendconnect"){
-            startserver(req,data);
+            startserver(ws,data);
         } 
        
 
