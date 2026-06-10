@@ -5,6 +5,7 @@ const WebSocket = require("ws");
 const callconfigs = require("./config");
 const homepage = require("./app/home.js");
 const startserver = require("./app/startserver.js");
+const playerupdate = require("./app/playerupdate.js");
 
 const app = express();
 
@@ -23,6 +24,9 @@ wss.on("connection", (ws) => {
 
         if(data.message=="sendconnect"){
             startserver(ws,data);
+        } 
+        if(data.message=="playerupdate"){
+            playerupdate(ws,data);
         } 
         
 
