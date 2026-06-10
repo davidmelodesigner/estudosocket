@@ -4,6 +4,7 @@ const WebSocket = require("ws");
 
 const callconfigs = require("./config");
 const homepage = require("./app/home.js");
+const startserver = require("./app/startserver.js");
 
 const app = express();
 
@@ -21,9 +22,7 @@ wss.on("connection", (ws) => {
         const data = JSON.parse(msg.toString());
 
         if(data.message=="sendconnect"){
-            ws.send(JSON.stringify({
-                message: "serverconnected"
-            }));
+            startserver(req,data);
         } 
        
 
