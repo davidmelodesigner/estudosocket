@@ -3,7 +3,7 @@ const http = require("http");
 const WebSocket = require("ws");
 
 const callconfigs = require("./config");
-const callconfigs = require("./app/home.js");
+const homepage = require("./app/home.js");
 
 const app = express();
 
