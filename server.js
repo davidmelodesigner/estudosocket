@@ -6,56 +6,87 @@ const homepage = require("./app/home.js");
 
 const app = express();
 
-/* ======================
-   ROUTE HOME (CORRETO)
-====================== */
-
 app.get("/", (req, res) => {
     homepage(req, res);
 });
 
-/* ======================
-   HTTP SERVER
-====================== */
-
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-/* ======================
-   WEBSOCKET CLIENTS
-====================== */
+const players = {};
+const connections = {};
 
-const clients = new Map();
+/* =========================
+   BROADCAST
+========================= */
+function broadcast(msg) {
 
-/* ======================
+    const data = JSON.stringify(msg);
+
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(data);
+        }
+    });
+}
+
+/* =========================
    CONNECTION
-====================== */
-
+========================= */
 wss.on("connection", (ws) => {
 
     ws.on("message", (msg) => {
 
-        const data = JSON.parse(msg);
+        let data;
 
-        const id = data.playerid;
+        try {
+            data = JSON.parse(msg.toString());
+        } catch (e) {
+            return;
+        }
 
-        if (data.message === "connect") {
+        /* =========================
+           CONNECT
+        ========================= */
+        if (data.message === "sendconnect") {
+
+            const id = data.playerid;
+
+            if (!id) return;
+
+            // remove duplicado
+            if (connections[id]) {
+                try {
+                    connections[id].terminate();
+                } catch (e) {}
+            }
 
             ws.playerid = id;
-            clients.set(id, ws);
 
+            connections[id] = ws;
+            players[id] = data;
+
+            // avisa todos
             broadcast({
-                message: "join",
+                message: "playerjoin",
                 playerid: id
-            }, ws);
+            });
 
             return;
         }
 
-        if (data.message === "update") {
+        /* =========================
+           UPDATE
+        ========================= */
+        if (data.message === "playerupdate") {
+
+            const id = data.playerid;
+
+            connections[id] = ws;
+            players[id] = data;
 
             broadcast({
-                message: "update",
+                message: "playerupdate",
                 playerid: id,
                 x: data.x,
                 y: data.y,
@@ -63,47 +94,51 @@ wss.on("connection", (ws) => {
                 rx: data.rx,
                 ry: data.ry,
                 rz: data.rz
-            }, ws);
+            });
+
+            return;
+        }
+
+        /* =========================
+           GET ALL USERS
+        ========================= */
+        if (data.message === "getallusers") {
+
+            ws.send(JSON.stringify({
+                message: "allusers",
+                users: players
+            }));
 
             return;
         }
     });
 
+    /* =========================
+       DISCONNECT
+    ========================= */
     ws.on("close", () => {
 
         const id = ws.playerid;
 
         if (!id) return;
 
-        clients.delete(id);
+        delete connections[id];
+        delete players[id];
 
         broadcast({
-            message: "leave",
+            message: "playerleave",
             playerid: id
-        }, ws);
+        });
+
+        console.log("SAIU:", id);
     });
 });
 
-/* ======================
-   BROADCAST SYSTEM
-====================== */
+/* =========================
+   START (RAILWAY SAFE)
+========================= */
+const PORT = process.env.PORT;
 
-function broadcast(data, ignore) {
-
-    const msg = JSON.stringify(data);
-
-    for (const client of wss.clients) {
-
-        if (client.readyState === 1 && client !== ignore) {
-            client.send(msg);
-        }
-    }
-}
-
-/* ======================
-   START SERVER
-====================== */
-
-server.listen(3000, () => {
-    console.log("SERVER ONLINE");
+server.listen(PORT, "0.0.0.0", () => {
+    console.log("SERVER ONLINE:", PORT);
 });
