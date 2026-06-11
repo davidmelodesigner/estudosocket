@@ -13,7 +13,6 @@ const connections = {};
 
 const app = express();
 
-
 app.get("/", (req, res) => {
     homepage(req, res);
 });
@@ -26,29 +25,44 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
         const data = JSON.parse(msg.toString());
 
-        if (data.message == "sendconnect") {
+        if (data.message === "sendconnect") {
 
             if (connections[data.playerid]) {
                 connections[data.playerid].terminate();
                 delete connections[data.playerid];
                 delete players[data.playerid];
             }
-        
+
+            ws.playerid = data.playerid;
+
             startserver(ws, data, connections, players);
         }
-        if(data.message=="playerupdate"){
-            playerupdate(wss,ws,data,connections);
+
+        if (data.message === "playerupdate") {
+
+            connections[data.playerid] = ws;
+            players[data.playerid] = data;
+
+            playerupdate(wss, ws, data, connections);
         }
 
-        if(data.message=="getallusers"){
-            broadcastusers(wss,ws,data,connections);
-        } 
-        
+        if (data.message === "getallusers") {
+            broadcastusers(wss, ws, data, connections);
+        }
 
-        
     });
 
-    
+    ws.on("close", () => {
+
+        const id = ws.playerid;
+
+        if (!id) return;
+
+        delete connections[id];
+        delete players[id];
+
+        console.log("REMOVED:", id);
+    });
 
 });
 
