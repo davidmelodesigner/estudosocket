@@ -1,8 +1,10 @@
 const players = require("./players");
 
-module.exports = function playerupdate(wss, ws, data) {
+module.exports = function playerupdate(wss, ws, data, connections) {
 
     players[data.playerid] = data;
+
+    connections[data.playerid] = ws;
 
     wss.clients.forEach((client) => {
 
