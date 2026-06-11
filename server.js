@@ -26,7 +26,7 @@ wss.on("connection", (ws) => {
             startserver(ws,data);
         } 
         if(data.message=="playerupdate"){
-            playerupdate(ws,data);
+            playerupdate(wss,ws,data);
         } 
         
 
