@@ -1,4 +1,4 @@
-const players = {};
+const players = require("./players");
 
 module.exports = function broadcastusers(wss, ws, data) {
 
