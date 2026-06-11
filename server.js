@@ -2,110 +2,134 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 
-const homepage = require("./app/home.js");
-const startserver = require("./app/startserver.js");
-const playerupdate = require("./app/playerupdate.js");
-const broadcastusers = require("./app/broadcastusers.js");
-
-const players = require("./app/players");
-const connections = {};
-
 const app = express();
 
 app.get("/", (req, res) => {
-    homepage(req, res);
+    res.send("SERVER ONLINE");
 });
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+const players = {};
+const connections = {};
+
+/* =========================
+   CONNECTION
+========================= */
 wss.on("connection", (ws) => {
 
     ws.on("message", (msg) => {
-        const data = JSON.parse(msg.toString());
 
-        // =========================
-        // CONNECT
-        // =========================
-       if (data.message === "sendconnect") {
+        let data;
+        try {
+            data = JSON.parse(msg.toString());
+        } catch (e) {
+            return;
+        }
+
+        /* =========================
+           CONNECT
+        ========================= */
+        if (data.message === "sendconnect") {
 
             const id = data.playerid;
-        
+
             ws.playerid = id;
             connections[id] = ws;
-            players[id] = data;
-        
-            // 👇 AVISA OS OUTROS
-            wss.clients.forEach(client => {
-                if (client.readyState === 1 && client !== ws) {
-                    client.send(JSON.stringify({
-                        message: "playerjoin",
-                        playerid: id
-                    }));
-                }
-            });
-        
-            // 👇 ENVIA QUEM JÁ ESTÁ ONLINE PARA O NOVO PLAYER
+
+            // cria player se não existir
+            if (!players[id]) {
+                players[id] = {
+                    playerid: id,
+                    x: 0, y: 0, z: 0,
+                    rx: 0, ry: 0, rz: 0
+                };
+            }
+
+            console.log("CONNECT:", id);
+
+            /* =========================
+               1. ENVIA PLAYERS EXISTENTES
+            ========================= */
             for (const pid in players) {
-        
                 if (pid === id) continue;
-        
+
                 ws.send(JSON.stringify({
                     message: "playerjoin",
-                    playerid: pid
+                    playerid: pid,
+                    ...players[pid]
                 }));
             }
-        
-            console.log("PLAYER CONNECT:", id);
+
+            /* =========================
+               2. AVISA OUTROS SOBRE NOVO PLAYER
+            ========================= */
+            for (const pid in connections) {
+                if (pid === id) continue;
+
+                connections[pid].send(JSON.stringify({
+                    message: "playerjoin",
+                    playerid: id,
+                    ...players[id]
+                }));
+            }
         }
 
-        // =========================
-        // UPDATE
-        // =========================
-        if (data.message == "playerupdate") {
+        /* =========================
+           UPDATE POSITION
+        ========================= */
+        if (data.message === "playerupdate") {
 
-            connections[data.playerid] = ws;
-            players[data.playerid] = data;
+            const id = data.playerid;
+            if (!players[id]) return;
 
-            // usa seu playerupdate original
-            playerupdate(wss, ws, data, connections);
+            players[id] = {
+                playerid: id,
+                x: data.x,
+                y: data.y,
+                z: data.z,
+                rx: data.rx,
+                ry: data.ry,
+                rz: data.rz
+            };
 
-            return;
-        }
+            for (const pid in connections) {
+                if (pid === id) continue;
 
-        // =========================
-        // GET USERS
-        // =========================
-        if (data.message == "getallusers") {
-
-            broadcastusers(wss, ws, data, connections);
-
-            return;
+                connections[pid].send(JSON.stringify({
+                    message: "playerupdate",
+                    ...players[id]
+                }));
+            }
         }
     });
 
+    /* =========================
+       DISCONNECT
+    ========================= */
     ws.on("close", () => {
 
         const id = ws.playerid;
-
         if (!id) return;
 
         delete connections[id];
         delete players[id];
 
-        wss.clients.forEach(client => {
-            if (client.readyState === 1) {
-                client.send(JSON.stringify({
-                    message: "playerleave",
-                    playerid: id
-                }));
-            }
-        });
+        console.log("DISCONNECT:", id);
 
+        for (const pid in connections) {
+            connections[pid].send(JSON.stringify({
+                message: "playerleave",
+                playerid: id
+            }));
+        }
     });
-
 });
 
+/* =========================
+   START SERVER
+========================= */
 server.listen(process.env.PORT || 3000, () => {
-    console.log("Servidor online");
+    console.log("SERVER ONLINE");
 });
