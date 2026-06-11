@@ -27,24 +27,36 @@ wss.on("connection", (ws) => {
         // =========================
         // CONNECT
         // =========================
-        if (data.message == "sendconnect") {
+       if (data.message === "sendconnect") {
 
-            ws.playerid = data.playerid;
-
-            connections[data.playerid] = ws;
-            players[data.playerid] = data;
-
-            // avisa todos
+            const id = data.playerid;
+        
+            ws.playerid = id;
+            connections[id] = ws;
+            players[id] = data;
+        
+            // 👇 AVISA OS OUTROS
             wss.clients.forEach(client => {
-                if (client.readyState === 1) {
+                if (client.readyState === 1 && client !== ws) {
                     client.send(JSON.stringify({
                         message: "playerjoin",
-                        playerid: data.playerid
+                        playerid: id
                     }));
                 }
             });
-
-            return;
+        
+            // 👇 ENVIA QUEM JÁ ESTÁ ONLINE PARA O NOVO PLAYER
+            for (const pid in players) {
+        
+                if (pid === id) continue;
+        
+                ws.send(JSON.stringify({
+                    message: "playerjoin",
+                    playerid: pid
+                }));
+            }
+        
+            console.log("PLAYER CONNECT:", id);
         }
 
         // =========================
