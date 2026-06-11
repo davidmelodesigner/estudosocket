@@ -24,46 +24,49 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
         const data = JSON.parse(msg.toString());
 
-        if (data.message == "sendconnect") {
-
-            if (connections[data.playerid]) {
-                connections[data.playerid].terminate();
-                delete connections[data.playerid];
-                delete players[data.playerid];
-            }
+        // ======================
+        // CONNECT
+        // ======================
+        if (data.message === "sendconnect") {
 
             ws.playerid = data.playerid;
 
             connections[data.playerid] = ws;
             players[data.playerid] = data;
 
-            wss.clients.forEach(client => {
-                if (client.readyState === 1) {
-                    client.send(JSON.stringify({
-                        message: "playerjoin",
-                        playerid: data.playerid
-                    }));
-                }
-            });
+            ws.send(JSON.stringify({
+                message: "serverconnected",
+                playerid: data.playerid
+            }));
 
-            startserver(ws, data, connections, players);
+            return;
         }
 
-        if (data.message == "playerupdate") {
+        // ======================
+        // UPDATE PLAYER
+        // ======================
+        if (data.message === "playerupdate") {
 
             connections[data.playerid] = ws;
             players[data.playerid] = data;
 
             playerupdate(wss, ws, data, connections);
+
+            return;
         }
 
-        if (data.message == "getallusers") {
+        // ======================
+        // GET ALL USERS
+        // ======================
+        if (data.message === "getallusers") {
+
             broadcastusers(wss, ws, data, connections);
+
+            return;
         }
 
     });
 
-    // 👇 AQUI É O "connection close"
     ws.on("close", () => {
 
         const id = ws.playerid;
@@ -82,7 +85,6 @@ wss.on("connection", (ws) => {
             }
         });
 
-        console.log("SAIU:", id);
     });
 
 });
