@@ -24,47 +24,52 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
         const data = JSON.parse(msg.toString());
 
-        // ======================
+        // =========================
         // CONNECT
-        // ======================
-        if (data.message === "sendconnect") {
+        // =========================
+        if (data.message == "sendconnect") {
 
             ws.playerid = data.playerid;
 
             connections[data.playerid] = ws;
             players[data.playerid] = data;
 
-            ws.send(JSON.stringify({
-                message: "serverconnected",
-                playerid: data.playerid
-            }));
+            // avisa todos
+            wss.clients.forEach(client => {
+                if (client.readyState === 1) {
+                    client.send(JSON.stringify({
+                        message: "playerjoin",
+                        playerid: data.playerid
+                    }));
+                }
+            });
 
             return;
         }
 
-        // ======================
-        // UPDATE PLAYER
-        // ======================
-        if (data.message === "playerupdate") {
+        // =========================
+        // UPDATE
+        // =========================
+        if (data.message == "playerupdate") {
 
             connections[data.playerid] = ws;
             players[data.playerid] = data;
 
+            // usa seu playerupdate original
             playerupdate(wss, ws, data, connections);
 
             return;
         }
 
-        // ======================
-        // GET ALL USERS
-        // ======================
-        if (data.message === "getallusers") {
+        // =========================
+        // GET USERS
+        // =========================
+        if (data.message == "getallusers") {
 
             broadcastusers(wss, ws, data, connections);
 
             return;
         }
-
     });
 
     ws.on("close", () => {
