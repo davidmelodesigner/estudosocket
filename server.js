@@ -26,22 +26,29 @@ wss.on("connection", (ws) => {
 
         if (data.message == "sendconnect") {
 
-            if (connections[data.playerid]) {
-                connections[data.playerid].terminate();
-                delete connections[data.playerid];
-                delete players[data.playerid];
+            const id = data.playerid;
+
+            if (!id) return;
+
+            if (connections[id] && connections[id] !== ws) {
+                connections[id].terminate();
+                delete players[id];
+                delete connections[id];
             }
 
-            ws.playerid = data.playerid;
+            ws.playerid = id;
+            connections[id] = ws;
 
-            connections[data.playerid] = ws;
-            players[data.playerid] = data;
+            players[id] = {
+                playerid: id
+            };
 
+            // avisa OUTROS players (não inclui o próprio)
             wss.clients.forEach(client => {
-                if (client.readyState === 1) {
+                if (client.readyState === 1 && client !== ws) {
                     client.send(JSON.stringify({
                         message: "playerjoin",
-                        playerid: data.playerid
+                        playerid: id
                     }));
                 }
             });
@@ -50,20 +57,14 @@ wss.on("connection", (ws) => {
         }
 
         if (data.message == "playerupdate") {
-
-            connections[data.playerid] = ws;
-            players[data.playerid] = data;
-
             playerupdate(wss, ws, data, connections);
         }
 
         if (data.message == "getallusers") {
             broadcastusers(wss, ws, data, connections);
         }
-
     });
 
-    // 👇 AQUI É O "connection close"
     ws.on("close", () => {
 
         const id = ws.playerid;
@@ -81,10 +82,7 @@ wss.on("connection", (ws) => {
                 }));
             }
         });
-
-        console.log("SAIU:", id);
     });
-
 });
 
 server.listen(process.env.PORT || 3000, () => {
