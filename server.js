@@ -19,7 +19,13 @@ app.get("/", (req, res) => {
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-
+function broadcast(wss, msg) {
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(JSON.stringify(msg));
+        }
+    });
+}
 wss.on("connection", (ws) => {
 
     ws.on("message", (msg) => {
@@ -27,16 +33,24 @@ wss.on("connection", (ws) => {
 
         if (data.message === "sendconnect") {
 
-            if (connections[data.playerid]) {
-                connections[data.playerid].terminate();
-                delete connections[data.playerid];
-                delete players[data.playerid];
+                if (connections[data.playerid]) {
+                    connections[data.playerid].terminate();
+                    delete connections[data.playerid];
+                    delete players[data.playerid];
+                }
+            
+                ws.playerid = data.playerid;
+            
+                connections[data.playerid] = ws;
+                players[data.playerid] = data;
+            
+                broadcast(wss, {
+                    message: "playerjoin",
+                    playerid: data.playerid
+                });
+            
+                startserver(ws, data, connections, players);
             }
-
-            ws.playerid = data.playerid;
-
-            startserver(ws, data, connections, players);
-        }
 
         if (data.message === "playerupdate") {
 
@@ -55,13 +69,18 @@ wss.on("connection", (ws) => {
     ws.on("close", () => {
 
         const id = ws.playerid;
-
+    
         if (!id) return;
-
+    
         delete connections[id];
         delete players[id];
-
-        console.log("REMOVED:", id);
+    
+        broadcast(wss, {
+            message: "playerleave",
+            playerid: id
+        });
+    
+        console.log("LEFT:", id);
     });
 
 });
