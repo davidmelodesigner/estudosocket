@@ -1,67 +1,47 @@
-const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 
-const homepage = require("./app/home.js");
-const startserver = require("./app/startserver.js");
-const playerupdate = require("./app/playerupdate.js");
-const broadcastusers = require("./app/broadcastusers.js");
-
-const players = require("./app/players");
-const connections = {};
-
-const app = express();
-
-app.get("/", (req, res) => {
-    homepage(req, res);
-});
-
-const server = http.createServer(app);
+const server = http.createServer();
 const wss = new WebSocket.Server({ server });
+
+const clients = new Map();
 
 wss.on("connection", (ws) => {
 
     ws.on("message", (msg) => {
-        const data = JSON.parse(msg.toString());
 
-        if (data.message == "sendconnect") {
+        const data = JSON.parse(msg);
 
-            const id = data.playerid;
+        const id = data.playerid;
 
-            if (!id) return;
-
-            if (connections[id] && connections[id] !== ws) {
-                connections[id].terminate();
-                delete players[id];
-                delete connections[id];
-            }
+        if (data.message === "connect") {
 
             ws.playerid = id;
-            connections[id] = ws;
+            clients.set(id, ws);
 
-            players[id] = {
+            // avisa outros
+            broadcast({
+                message: "join",
                 playerid: id
-            };
+            }, ws);
 
-            // avisa OUTROS players (não inclui o próprio)
-            wss.clients.forEach(client => {
-                if (client.readyState === 1 && client !== ws) {
-                    client.send(JSON.stringify({
-                        message: "playerjoin",
-                        playerid: id
-                    }));
-                }
-            });
-
-            startserver(ws, data, connections, players);
+            return;
         }
 
-        if (data.message == "playerupdate") {
-            playerupdate(wss, ws, data, connections);
-        }
+        if (data.message === "update") {
 
-        if (data.message == "getallusers") {
-            broadcastusers(wss, ws, data, connections);
+            broadcast({
+                message: "update",
+                playerid: id,
+                x: data.x,
+                y: data.y,
+                z: data.z,
+                rx: data.rx,
+                ry: data.ry,
+                rz: data.rz
+            }, ws);
+
+            return;
         }
     });
 
@@ -71,20 +51,26 @@ wss.on("connection", (ws) => {
 
         if (!id) return;
 
-        delete connections[id];
-        delete players[id];
+        clients.delete(id);
 
-        wss.clients.forEach(client => {
-            if (client.readyState === 1) {
-                client.send(JSON.stringify({
-                    message: "playerleave",
-                    playerid: id
-                }));
-            }
-        });
+        broadcast({
+            message: "leave",
+            playerid: id
+        }, ws);
     });
 });
 
-server.listen(process.env.PORT || 3000, () => {
-    console.log("Servidor online");
+function broadcast(data, ignore) {
+
+    const msg = JSON.stringify(data);
+
+    for (const client of wss.clients) {
+        if (client.readyState === 1 && client !== ignore) {
+            client.send(msg);
+        }
+    }
+}
+
+server.listen(3000, () => {
+    console.log("SERVER OK");
 });
