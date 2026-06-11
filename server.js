@@ -6,6 +6,7 @@ const callconfigs = require("./config");
 const homepage = require("./app/home.js");
 const startserver = require("./app/startserver.js");
 const playerupdate = require("./app/playerupdate.js");
+const broadcastusers = require("./app/broadcastusers.js");
 
 const app = express();
 
@@ -27,6 +28,10 @@ wss.on("connection", (ws) => {
         } 
         if(data.message=="playerupdate"){
             playerupdate(wss,ws,data);
+        }
+
+        if(data.message=="getallusers"){
+            broadcastusers(wss,ws,data);
         } 
         
 
