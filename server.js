@@ -100,7 +100,11 @@ wss.on("connection", (ws) => {
                 z: data.z,
                 rx: data.rx,
                 ry: data.ry,
-                rz: data.rz
+                rz: data.rz,
+                walk: data.walk,
+               run: data.run,
+               onground: data.onground
+               
             };
 
             for (const pid in connections) {
