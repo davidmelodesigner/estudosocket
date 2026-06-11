@@ -1,11 +1,15 @@
+const players = require("./players");
+
 module.exports = function playerupdate(wss, ws, data) {
 
-    wss.clients.forEach(function(client) {
+    players[data.playerid] = data;
 
-        if (client.readyState === 1 && client.readyState === 1) {
+    wss.clients.forEach((client) => {
+
+        if (client.readyState === 1) {
 
             client.send(JSON.stringify({
-                message: 'playerupdate',
+                message: "playerupdate",
                 respdata: data
             }));
 
