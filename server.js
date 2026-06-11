@@ -26,9 +26,16 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
         const data = JSON.parse(msg.toString());
 
-        if(data.message=="sendconnect"){
-            startserver(ws,data);
-        } 
+        if (data.message == "sendconnect") {
+
+            if (connections[data.playerid]) {
+                connections[data.playerid].terminate();
+                delete connections[data.playerid];
+                delete players[data.playerid];
+            }
+        
+            startserver(ws, data, connections, players);
+        }
         if(data.message=="playerupdate"){
             playerupdate(wss,ws,data,connections);
         }
