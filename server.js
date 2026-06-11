@@ -1,10 +1,35 @@
+const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 
-const server = http.createServer();
+const homepage = require("./app/home.js");
+
+const app = express();
+
+/* ======================
+   ROUTE HOME (CORRETO)
+====================== */
+
+app.get("/", (req, res) => {
+    homepage(req, res);
+});
+
+/* ======================
+   HTTP SERVER
+====================== */
+
+const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+/* ======================
+   WEBSOCKET CLIENTS
+====================== */
+
 const clients = new Map();
+
+/* ======================
+   CONNECTION
+====================== */
 
 wss.on("connection", (ws) => {
 
@@ -19,7 +44,6 @@ wss.on("connection", (ws) => {
             ws.playerid = id;
             clients.set(id, ws);
 
-            // avisa outros
             broadcast({
                 message: "join",
                 playerid: id
@@ -60,17 +84,26 @@ wss.on("connection", (ws) => {
     });
 });
 
+/* ======================
+   BROADCAST SYSTEM
+====================== */
+
 function broadcast(data, ignore) {
 
     const msg = JSON.stringify(data);
 
     for (const client of wss.clients) {
+
         if (client.readyState === 1 && client !== ignore) {
             client.send(msg);
         }
     }
 }
 
+/* ======================
+   START SERVER
+====================== */
+
 server.listen(3000, () => {
-    console.log("SERVER OK");
+    console.log("SERVER ONLINE");
 });
