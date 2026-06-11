@@ -2,13 +2,19 @@ const players = {};
 
 module.exports = function broadcastusers(wss, ws, data) {
 
-    if (data.playerid) {
-        players[data.playerid] = data;
+    const users = {};
+
+    for (const id in players) {
+
+        if (id != data.playerid) {
+            users[id] = players[id];
+        }
+
     }
 
     ws.send(JSON.stringify({
         message: "allusers",
-        users: players
+        users: users
     }));
 
 };
