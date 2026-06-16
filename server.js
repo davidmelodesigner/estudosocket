@@ -42,12 +42,15 @@ wss.on("connection", (ws) => {
         /* ======================
            CONNECT
         ====================== */
-        if (data.message === "startserver") {
-        	ws.send(JSON.stringify({
-                    message: "connected",
-                    id: ws.userId
-                }));
-        }
+       if (data.message === "startserver") {
+
+          ws.userId = Date.now().toString();
+      
+          ws.send(JSON.stringify({
+              message: "connected",
+              id: ws.userId
+          }));
+      }
         if (data.message === "sendconnect") {
 
             const id = data.playerid;
