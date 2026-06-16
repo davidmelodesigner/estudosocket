@@ -44,7 +44,7 @@ wss.on("connection", (ws) => {
         ====================== */
         if (data.message === "startserver") {
         	ws.send(JSON.stringify({
-                    message: "connected",
+                    message: "connecteds",
                     id: ws.userId, 
                 }));
         }
