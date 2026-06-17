@@ -2,7 +2,7 @@
 module.exports = function getallusers(ws, data, wss,players) {
 
     const payload = JSON.stringify({
-        message: "connected",
+        message: "receiveusers",
         users: players, 
     });
 
