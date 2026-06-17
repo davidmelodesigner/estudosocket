@@ -43,7 +43,8 @@ wss.on("connection", (ws) => {
                 walk: data.walk,
                 run: data.run,
                 onground: data.onground,
-                atack: data.atack
+                atack: data.atack,
+                lastSeen: Date.now()
             };
 
             conectserver(ws, data, wss);
@@ -57,7 +58,8 @@ wss.on("connection", (ws) => {
             players[ws.userId] = {
                 ...players[ws.userId],
                 ...data,
-                id: ws.userId
+                id: ws.userId,
+                lastSeen: Date.now()
             };
         
             console.log(players[ws.userId]);
@@ -81,6 +83,22 @@ wss.on("connection", (ws) => {
 });
 
 
+// -------------------------
+// GHOST CLEANER
+// -------------------------
+setInterval(() => {
+
+    const now = Date.now();
+    const timeout = 5000;
+
+    for (const id in players) {
+
+        if (now - players[id].lastSeen > timeout) {
+            delete players[id];
+        }
+    }
+
+}, 2000);
 
 // -------------------------
 server.listen(process.env.PORT || 3000, () => {
