@@ -3,6 +3,7 @@ const http = require("http");
 const WebSocket = require("ws");
 const homepage = require("./home.js");
 const conectserver = require("./conectserver.js");
+const getallusers = require("./getusers.js");
 
 const app = express();
 
@@ -34,6 +35,15 @@ wss.on("connection", (ws) => {
 
             conectserver(ws, data, wss);
         }
+
+        // -------------------------
+        // UPDATE
+        // -------------------------
+        if (data.message === "updateplayer") {
+
+            getallusers(ws, data, wss,players)
+        }
+        
     });
 
     ws.on("close", () => {
