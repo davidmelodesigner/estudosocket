@@ -3,9 +3,9 @@ module.exports = function conectserver(ws, data, wss) {
 
     const payload = JSON.stringify({
         message: "connected",
-        type:data.type
+        type: data.type,
         userid: ws.userId
     });
 
-  ws.send(JSON.stringify(payload));
+    ws.send(payload);
 };
