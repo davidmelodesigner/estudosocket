@@ -54,7 +54,15 @@ wss.on("connection", (ws) => {
         // -------------------------
         if (data.message === "updateplayer") {
 
-            getallusers(ws, data, wss,players)
+            players[ws.userId] = {
+                ...players[ws.userId],
+                ...data,
+                id: ws.userId
+            };
+        
+            console.log(players[ws.userId]);
+        
+            getallusers(ws, data, wss, players);
         }
         
     });
