@@ -18,28 +18,33 @@ const players = {};
 // -------------------------
 // CONNECTION
 // -------------------------
+const playersid = [];
+
 wss.on("connection", (ws) => {
-
-    ws.userId = Math.random().toString(36).substr(2, 9);
-
-    players[ws.userId] = {
-        id: ws.userId,
-        x: 0, y: 0, z: 0,
-        rx: 0, ry: 0, rz: 0,
-        lastSeen: Date.now()
-    };
 
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
-        if(data.message==="startserver"){
+
+        if (data.message === "startserver") {
+
             ws.userId = Math.random().toString(36).substr(2, 9);
-            conectserver(ws, data, wss)
+
+            playersid.push(ws.userId);
+
+            conectserver(ws, data, wss);
         }
-        
     });
 
     ws.on("close", () => {
+        console.log("Saiu:", ws.userId);
+
+        const index = playersid.indexOf(ws.userId);
+
+        if (index !== -1) {
+            playersid.splice(index, 1);
+        }
+
         delete players[ws.userId];
     });
 });
