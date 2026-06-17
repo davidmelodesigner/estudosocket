@@ -36,12 +36,27 @@ wss.on("connection", (ws) => {
         // START
         // -------------------------
         if (data.message === "startserver") {
-            ws.userId = Date.now().toString();
-            ws.send(JSON.stringify({
-                message: "connected",
-                id: ws.userId
-            }));
-        }
+
+                delete players[ws.userId];
+            
+                ws.userId = Date.now().toString();
+            
+                players[ws.userId] = {
+                    id: ws.userId,
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    rx: 0,
+                    ry: 0,
+                    rz: 0,
+                    lastSeen: Date.now()
+                };
+            
+                ws.send(JSON.stringify({
+                    message: "connected",
+                    id: ws.userId
+                }));
+            }
 
         // -------------------------
         // UPDATE
@@ -103,6 +118,8 @@ setInterval(() => {
         message: "snapshot",
         players: Object.values(players)
     };
+
+    console.log("ENVIANDO SNAPSHOT:", snapshot);
 
     wss.clients.forEach(client => {
         if (client.readyState === 1) {
