@@ -2,7 +2,7 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const homepage = require("./home.js");
-const homepage = require("./conectserver.js");
+const conectserver = require("./conectserver.js");
 
 const app = express();
 
@@ -32,7 +32,7 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
-
+        conectserver(ws, data, wss)
         
     });
 
