@@ -32,6 +32,19 @@ wss.on("connection", (ws) => {
             ws.userId = Math.random().toString(36).substr(2, 9);
 
             playersid.push(ws.userId);
+            players[ws.userId] = {
+                id: ws.userId,
+                x: data.x,
+                y: data.y,
+                z: data.z,
+                rx: data.rx,
+                ry: data.ry,
+                rz: data.rz,
+                walk: data.walk,
+                run: data.run,
+                onground: data.onground,
+                atack: data.atack
+            };
 
             conectserver(ws, data, wss);
         }
