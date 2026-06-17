@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const homepage = require("./home.js");
+const homepage = require("./conectserver.js");
 
 const app = express();
 
@@ -32,75 +33,7 @@ wss.on("connection", (ws) => {
 
         const data = JSON.parse(msg.toString());
 
-        // -------------------------
-        // START
-        // -------------------------
-        if (data.message === "startserver") {
-
-                delete players[ws.userId];
-            
-                ws.userId = Date.now().toString();
-            
-                players[ws.userId] = {
-                    id: ws.userId,
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                    rx: 0,
-                    ry: 0,
-                    rz: 0,
-                    lastSeen: Date.now()
-                };
-            
-                ws.send(JSON.stringify({
-                    message: "connected",
-                    id: ws.userId
-                }));
-            }
-
-        // -------------------------
-        // UPDATE
-        // -------------------------
-        if (data.message === "updateplayer") {
-
-            if (!players[ws.userId]) return;
         
-            players[ws.userId] = {
-                ...players[ws.userId],
-                ...data,          // <- pega tudo que vier do client
-                lastSeen: Date.now()
-            };
-        }
-
-        // -------------------------
-        // PING
-        // -------------------------
-        if (data.message === "ping") {
-
-            if (players[ws.userId]) {
-                players[ws.userId].lastSeen = Date.now();
-            }
-        }
-
-        // -------------------------
-        // DISCONNECT MANUAL
-        // -------------------------
-        if (data.message === "disconnect") {
-
-            const id = ws.userId;
-        
-            delete players[id];
-        
-            wss.clients.forEach(client => {
-        
-                if (client.readyState !== 1) return;
-        
-                client.send(JSON.stringify({
-                    message: "remove",
-                    userId: id
-                }));
-            });
-        }
     });
 
     ws.on("close", () => {
@@ -108,44 +41,6 @@ wss.on("connection", (ws) => {
     });
 });
 
-
-// -------------------------
-// SNAPSHOT
-// -------------------------
-setInterval(() => {
-
-    const snapshot = {
-        message: "snapshot",
-        players: Object.values(players)
-    };
-
-    console.log("ENVIANDO SNAPSHOT:", snapshot);
-
-    wss.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify(snapshot));
-        }
-    });
-
-}, 20);
-
-
-// -------------------------
-// GHOST CLEANER
-// -------------------------
-setInterval(() => {
-
-    const now = Date.now();
-    const timeout = 5000;
-
-    for (const id in players) {
-
-        if (now - players[id].lastSeen > timeout) {
-            delete players[id];
-        }
-    }
-
-}, 2000);
 
 
 // -------------------------
