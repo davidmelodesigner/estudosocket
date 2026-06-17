@@ -32,7 +32,10 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
-        conectserver(ws, data, wss)
+        if(data.message==="startserver"){
+            ws.userId = Math.random().toString(36).substr(2, 9);
+            conectserver(ws, data, wss)
+        }
         
     });
 
