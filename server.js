@@ -29,8 +29,12 @@ wss.on("connection", (ws) => {
         const data = JSON.parse(msg.toString());
 
          if (data.message === "createuser") {
-               createUser(ws, data, wss);
-
+               //createUser(ws, data, wss);
+                const payload = JSON.stringify({
+                    message: "userlogued",
+                    userid: data
+                });
+                ws.send(payload);
          }
 
         
