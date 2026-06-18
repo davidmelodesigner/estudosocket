@@ -29,12 +29,16 @@ wss.on("connection", (ws) => {
         const data = JSON.parse(msg.toString());
 
          if (data.message === "createuser") {
-               const payload = JSON.stringify({
-                    message: "userlogued",
-                    userid: '98nhb9878'
-                });
 
-         }
+                const payload = JSON.stringify({
+                    message: "userlogued",
+                    userid: "98nhb9878"
+                });
+            
+                ws.send(payload);
+            
+                console.log("ENVIADO:", payload);
+            }
 
         
         
