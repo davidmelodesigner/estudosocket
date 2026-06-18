@@ -10,23 +10,9 @@ const pool = new Pool({
 
 module.exports = async function createUser(ws, data, wss) {
 
-    try {
-
-        const result = await pool.query(
-            "SELECT id, nome FROM usersplayers WHERE nome = $1 LIMIT 1",
-            [data.userId]
-        );
-
-        if (result.rows.length === 0) {
-
-            ws.send(JSON.stringify({
-                message: "loginfailed"
-            }));
-        }else{
-            ws.send(JSON.stringify({
+    ws.send(JSON.stringify({
                 message: "userlogued",
             }));
-        }
 
         
 
