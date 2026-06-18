@@ -30,7 +30,7 @@ wss.on("connection", (ws) => {
 
          if (data.message === "createuser") {
                 ws.send(JSON.stringify({
-            message: "createuser"
+            message: "userlogued"
         }));
 
          }
