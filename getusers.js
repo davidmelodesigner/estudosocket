@@ -8,7 +8,7 @@ module.exports = function getallusers(ws, data, wss, players) {
     wss.clients.forEach(client => {
 
         if (client.readyState === WebSocket.OPEN) {
-            client.send(payload);
+            client.send(players);
         }
 
     });
