@@ -1,9 +1,4 @@
 const { Pool } = require("pg");
-const crypto = require("crypto");
-
-const callconfigs = require("./config");
-
-const { Pool } = require("pg");
 const evenconfig = require("./evenconfig.js");
 
 const pool = new Pool({
@@ -13,41 +8,46 @@ const pool = new Pool({
     }
 });
 
-module.exports = function createUser(ws, data, wss) {
+module.exports = async function createUser(ws, data, wss) {
 
-    async function loginusers(usuario, senha, ws) {
-        try {
-            const result = await pool.query(
-                "SELECT id, nome FROM usersplayers WHERE email = $1 LIMIT 1",
-                [data.userId]
-            );
-    
-            if (result.rows.length === 0) {
-                ws.send(JSON.stringify({
-                    message: "loginfailed"
-                }));
-    
-                return { success: false };
-            }
-    
+    try {
+
+        const result = await pool.query(
+            "SELECT id, nome FROM usersplayers WHERE nome = $1 LIMIT 1",
+            [data.userId]
+        );
+
+        if (result.rows.length === 0) {
+
             ws.send(JSON.stringify({
-                message: "userlogued",
-                userid: data.userId
+                message: "loginfailed"
             }));
-    
-            return {
-                success: true,
-                userdata: userobj
-            };
-    
-        } catch (err) {
-            console.log(err);
-    
-            ws.send(JSON.stringify({
-                message: "errorserver"
-            }));
-    
-            return { success: false };
+
+            return;
         }
+
+        const userobj = result.rows[0];
+
+        ws.send(JSON.stringify({
+            message: "userlogued",
+            userid: userobj.nome
+        }));
+
+        return {
+            success: true,
+            userdata: userobj
+        };
+
+    } catch (err) {
+
+        console.log("POSTGRES ERROR:", err);
+
+        ws.send(JSON.stringify({
+            message: "errorserver"
+        }));
+
+        return {
+            success: false
+        };
     }
 };
