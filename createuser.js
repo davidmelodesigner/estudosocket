@@ -1,5 +1,5 @@
 const { Pool } = require("pg");
-const evenconfig = require("./evenconfig.js");
+const evenconfig = require("./config.js");
 
 const pool = new Pool({
     connectionString: evenconfig(),
