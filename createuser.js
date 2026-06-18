@@ -10,7 +10,7 @@ const pool = new Pool({
 
 module.exports = function createUser(ws, data, wss)  {
 
-    const userId = data.userid;
+    const userId = data.userId;
 
      const payload = JSON.stringify({
         message: "userlogued",
