@@ -29,7 +29,7 @@ wss.on("connection", (ws) => {
         const data = JSON.parse(msg.toString());
 
          if (data.message === "startserver") {
-                createuser(ws, data, wss)
+                createuser(ws, data, wss);
 
          }
 
