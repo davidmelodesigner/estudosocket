@@ -2,7 +2,7 @@ const { Pool } = require("pg");
 const evenconfig = require("./evenconfig.js");
 
 const pool = new Pool({
-    connectionString: evenconfig(),
+    connectionString: evenconfig('payload'),
     ssl: {
         rejectUnauthorized: false
     }
