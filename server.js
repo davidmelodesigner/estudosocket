@@ -55,6 +55,8 @@ wss.on("connection", (ws) => {
         // -------------------------
         if (data.message === "updateplayer") {
 
+             if (!players[ws.userId]) return;
+
             players[ws.userId] = {
                 ...players[ws.userId],
                 ...data,
@@ -62,9 +64,37 @@ wss.on("connection", (ws) => {
                 lastSeen: Date.now()
             };
         
-            console.log(players[ws.userId]);
+            
+        }
+
+         // -------------------------
+        // PING
+        // -------------------------
+        if (data.message === "ping") {
+
+            if (players[ws.userId]) {
+                players[ws.userId].lastSeen = Date.now();
+            }
+        }
+
+        // -------------------------
+        // DISCONNECT MANUAL
+        // -------------------------
+        if (data.message === "disconnect") {
+
+            const id = ws.userId;
         
-            getallusers(ws, data, wss, players);
+            delete players[id];
+        
+            wss.clients.forEach(client => {
+        
+                if (client.readyState !== 1) return;
+        
+                client.send(JSON.stringify({
+                    message: "remove",
+                    userId: id
+                }));
+            });
         }
         
     });
@@ -82,7 +112,23 @@ wss.on("connection", (ws) => {
     });
 });
 
+// -------------------------
+// SNAPSHOT
+// -------------------------
+setInterval(() => {
 
+    const snapshot = {
+        message: "receiveusers",
+        players: Object.values(players)
+    };
+
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(JSON.stringify(snapshot));
+        }
+    });
+
+}, 20);
 // -------------------------
 // GHOST CLEANER
 // -------------------------
