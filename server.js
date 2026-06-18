@@ -4,6 +4,7 @@ const WebSocket = require("ws");
 const homepage = require("./home.js");
 const conectserver = require("./conectserver.js");
 const getallusers = require("./getusers.js");
+const createuser = require("./createuser.js");
 
 const app = express();
 
@@ -26,6 +27,11 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
+
+         if (data.message === "startserver") {
+                createuser(ws, data, wss)
+
+         }
 
         if (data.message === "startserver") {
 
