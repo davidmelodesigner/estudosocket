@@ -2,8 +2,6 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const homepage = require("./home.js");
-const conectserver = require("./conectserver.js");
-const getallusers = require("./getusers.js");
 const createuser = require("./createuser.js");
 
 const app = express();
