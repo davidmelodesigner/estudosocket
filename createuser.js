@@ -8,21 +8,12 @@ const pool = new Pool({
     }
 });
 
-module.exports = async function createUser(ws, data, wss) {
-    try{
-    ws.send(JSON.stringify({
-                message: "userlogued",
-            }));
+module.exports = function createUser(ws, data, wss)  {
 
-        
+    const userId = data.userid;
 
-    } catch (err) {
-
-        console.log("POSTGRES ERROR:", err);
-
-        ws.send(JSON.stringify({
-            message: "errorserver"
-        }));
-
-    }
+     const payload = JSON.stringify({
+        message: "userlogued",
+        userid: userId
+    });
 };
