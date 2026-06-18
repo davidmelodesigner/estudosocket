@@ -22,21 +22,13 @@ module.exports = async function createUser(ws, data, wss) {
             ws.send(JSON.stringify({
                 message: "loginfailed"
             }));
-
-            return;
+        }else{
+            ws.send(JSON.stringify({
+                message: "userlogued",
+            }));
         }
 
-        const userobj = result.rows[0];
-
-        ws.send(JSON.stringify({
-            message: "userlogued",
-            userid: userobj.nome
-        }));
-
-        return {
-            success: true,
-            userdata: userobj
-        };
+        
 
     } catch (err) {
 
@@ -46,8 +38,5 @@ module.exports = async function createUser(ws, data, wss) {
             message: "errorserver"
         }));
 
-        return {
-            success: false
-        };
     }
 };
