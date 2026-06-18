@@ -1,8 +1,8 @@
 
-module.exports = function createUser(ws, data, wss)  {
+module.exports = function createUser(ws, userid, wss)  {
      const payload = JSON.stringify({
         message: "userlogued",
-        userid: data
+        userid: userid
     });
     ws.send(payload);
 };
