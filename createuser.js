@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 module.exports = async function createUser(ws, data, wss) {
-
+    try{
     ws.send(JSON.stringify({
                 message: "userlogued",
             }));
