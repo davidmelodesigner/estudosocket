@@ -37,6 +37,7 @@ function getUser(ws, userid, wss) {
             });
         }else{
             userobj = {
+                message: "getuser",
                 id: insert.rows[0].id,
                 nome: insert.rows[0].nome
             };
