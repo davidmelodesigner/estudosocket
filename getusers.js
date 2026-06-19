@@ -24,29 +24,44 @@ function getallusers(ws, data, wss, players) {
     });
 }
 
-function getUser(ws, userid, wss) {
+async function getUser(ws, userid, wss) {
 
-    const result = await pool.query(
-            "SELECT id FROM usersplayers WHERE id = $1 LIMIT 1",
+    try {
+        const result = await pool.query(
+            "SELECT id, nome FROM usersplayers WHERE id = $1 LIMIT 1",
             [userid]
         );
 
-        if (result.rows.length === 0) {
-            const payload = JSON.stringify({
-                message: "notgetuser",
-            });
-        }else{
-            userobj = {
-                message: "getuser",
-                id: insert.rows[0].id,
-                nome: insert.rows[0].nome
-            };
-            const payload = JSON.stringify(userobj);
-        }
-    
-    
+        let payload;
 
-    ws.send(payload);
+        if (result.rows.length === 0) {
+
+            payload = JSON.stringify({
+                message: "notgetuser"
+            });
+
+        } else {
+
+            const userobj = {
+                id: result.rows[0].id,
+                nome: result.rows[0].nome
+            };
+
+            payload = JSON.stringify({
+                message: "getuser",
+                userdata: userobj
+            });
+        }
+
+        ws.send(payload);
+
+    } catch (err) {
+        console.log(err);
+
+        ws.send(JSON.stringify({
+            message: "errorserver"
+        }));
+    }
 }
 
 module.exports = {
