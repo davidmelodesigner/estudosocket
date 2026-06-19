@@ -17,11 +17,26 @@ const pool = new Pool({
             );
     
             if (result.rows.length === 0) {
+
+                const insert = await pool.query(
+                    "INSERT INTO users (nome) VALUES ($1) RETURNING id, nome",
+                    [userid]
+                );
+            
+                const userobj = {
+                    id: insert.rows[0].id,
+                    nome: insert.rows[0].nome
+                };
+            
                 ws.send(JSON.stringify({
-                    message: "loginfailed"
+                    message: "userlogued",
+                    userdata: userobj
                 }));
-    
-                return { success: false };
+            
+                return {
+                    success: true,
+                    userdata: userobj
+                };
             }
     
             const userobj = {
