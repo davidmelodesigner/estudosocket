@@ -60,5 +60,44 @@ async function createUser(ws, userid) {
         return { success: false };
     }
 }
+async function logoutUser(ws, userid) {
+    try {
 
-module.exports = createUser;
+        const result = await pool.query(
+            "SELECT id FROM usersplayers WHERE nome = $1 LIMIT 1",
+            [userid]
+        );
+
+        if (result.rows.length === 0) {
+            console.log("Usuário não encontrado no logout:", userid);
+            return { success: false };
+        }
+
+        await pool.query(
+            "DELETE FROM usersplayers WHERE nome = $1",
+            [userid]
+        );
+
+        ws.send(JSON.stringify({
+            message: "userlogout",
+            userid: userid
+        }));
+
+        console.log("USER DELETADO:", userid);
+
+        return { success: true };
+
+    } catch (err) {
+        console.log(err);
+
+        ws.send(JSON.stringify({
+            message: "errorserver"
+        }));
+
+        return { success: false };
+    }
+}
+module.exports = {
+    createUser,
+    logoutUser
+};
