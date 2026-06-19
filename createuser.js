@@ -10,7 +10,10 @@ const pool = new Pool({
 
 async function createUser(ws, userid) {
     try {
+        const crypto = require("crypto");
 
+        const sufixo = crypto.randomBytes(8).toString("hex");
+        userid = `${userid}_${sufixo}`;
         // 1. procura usuário
         const result = await pool.query(
             "SELECT id, nome FROM usersplayers WHERE nome = $1 LIMIT 1",
