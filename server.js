@@ -24,6 +24,13 @@ const playersid = [];
 
 wss.on("connection", (ws) => {
 
+    players[ws.userId] = {
+        id: ws.userId,
+        x: 0, y: 0, z: 0,
+        rx: 0, ry: 0, rz: 0,
+        lastSeen: Date.now()
+    };
+
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
@@ -32,6 +39,29 @@ wss.on("connection", (ws) => {
                createUser(ws, data.userId, wss);
                 
          }
+        // -------------------------
+        // UPDATE
+        // -------------------------
+        if (data.message === "updateplayer") {
+
+            if (!players[ws.userId]) return;
+        
+            players[ws.userId] = {
+                ...players[ws.userId],
+                ...data,          // <- pega tudo que vier do client
+                lastSeen: Date.now()
+            };
+        }
+
+        // -------------------------
+        // PING
+        // -------------------------
+        if (data.message === "ping") {
+
+            if (players[ws.userId]) {
+                players[ws.userId].lastSeen = Date.now();
+            }
+        }
         if (data.message === "disconnect") {
 
             if (data.userId === "" || data.userId == null) {
@@ -69,7 +99,41 @@ wss.on("connection", (ws) => {
         delete players[ws.userId];
     });
 });
+// -------------------------
+// SNAPSHOT
+// -------------------------
+setInterval(() => {
 
+    const snapshot = {
+        message: "snapshot",
+        players: Object.values(players)
+    };
+
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(JSON.stringify(snapshot));
+        }
+    });
+
+}, 20);
+
+
+// -------------------------
+// GHOST CLEANER
+// -------------------------
+setInterval(() => {
+
+    const now = Date.now();
+    const timeout = 5000;
+
+    for (const id in players) {
+
+        if (now - players[id].lastSeen > timeout) {
+            delete players[id];
+        }
+    }
+
+}, 2000);
 
 // -------------------------
 server.listen(process.env.PORT || 3000, () => {
