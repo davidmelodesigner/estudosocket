@@ -32,7 +32,20 @@ wss.on("connection", (ws) => {
                 
          }
         if (data.message === "disconnect") {
-            logoutUser(ws, data.userId, wss);
+
+            if (data.userId === "" || data.userId == null) {
+        
+                
+                ws.send(JSON.stringify({
+                    message: "userlogout",
+                }));
+        
+                console.log("USERLOGOUT SENT");
+        
+            } else {
+                logoutUser(ws, data.userId, wss);
+                
+            }
         }
 
         
