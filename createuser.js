@@ -13,7 +13,7 @@ async function createUser(ws, userid) {
 
         // 1. procura usuário
         const result = await pool.query(
-            "SELECT id, nome FROM users WHERE nome = $1 LIMIT 1",
+            "SELECT id, nome FROM usersplayers WHERE nome = $1 LIMIT 1",
             [userid]
         );
 
@@ -23,7 +23,7 @@ async function createUser(ws, userid) {
         if (result.rows.length === 0) {
 
             const insert = await pool.query(
-                "INSERT INTO users (nome) VALUES ($1) RETURNING id, nome",
+                "INSERT INTO usersplayers (nome) VALUES ($1) RETURNING id, nome",
                 [userid]
             );
 
