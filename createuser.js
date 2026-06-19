@@ -7,10 +7,9 @@ const pool = new Pool({
         rejectUnauthorized: false
     }
 });
-module.exports = function createUser(ws, userid, wss)  {
-    
 
-    async function loginusers(usuario, senha, ws) {
+
+    async function createUser(ws, userid, wss) {
         try {
             const result = await pool.query(
                 "SELECT id, nome FROM users WHERE nome = $1 LIMIT 1",
@@ -51,4 +50,3 @@ module.exports = function createUser(ws, userid, wss)  {
         }
     }
     
-};
