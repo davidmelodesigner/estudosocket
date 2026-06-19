@@ -11,6 +11,7 @@ const pool = new Pool({
 async function logoutUser(ws, userid) {
    ws.send(JSON.stringify({
             message: "userlogout",
+            userid:userid
         }));
 }
 
