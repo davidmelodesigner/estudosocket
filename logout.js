@@ -18,7 +18,7 @@ async function logoutUser(ws, userid) {
 
         // 1. verifica se usuário existe
         const result = await pool.query(
-            "SELECT id FROM usersplayers WHERE nome = $1 LIMIT 1",
+            "SELECT id FROM usersplayers WHERE id = $1 LIMIT 1",
             [userid]
         );
 
@@ -29,7 +29,7 @@ async function logoutUser(ws, userid) {
 
         // 2. deleta usuário do banco
         await pool.query(
-            "DELETE FROM usersplayers WHERE nome = $1",
+            "DELETE FROM usersplayers WHERE id = $1",
             [userid]
         );
 
