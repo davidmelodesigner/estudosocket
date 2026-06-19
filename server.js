@@ -32,7 +32,7 @@ wss.on("connection", (ws) => {
                 
          }
         if (data.message === "disconnect") {
-            logoutUser(ws, data.userId);
+            logoutUser(ws, data.userId, wss);
         }
 
         
