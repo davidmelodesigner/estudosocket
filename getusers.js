@@ -1,4 +1,4 @@
-module.exports = function getallusers(ws, data, wss, players) {
+function getallusers(ws, data, wss, players) {
 
     const payload = JSON.stringify({
         message: "receiveusers",
@@ -7,14 +7,14 @@ module.exports = function getallusers(ws, data, wss, players) {
 
     wss.clients.forEach(client => {
 
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(players);
+        if (client.readyState === 1) {
+            client.send(payload);
         }
 
     });
-};
+}
 
-module.exports = function getUser(ws, userid, wss) {
+function getUser(ws, userid, wss) {
 
     const payload = JSON.stringify({
         message: "getuser",
@@ -22,6 +22,9 @@ module.exports = function getUser(ws, userid, wss) {
     });
 
     ws.send(payload);
+}
 
-    
+module.exports = {
+    getallusers,
+    getUser
 };
