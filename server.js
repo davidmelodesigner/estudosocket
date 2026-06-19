@@ -30,6 +30,9 @@ wss.on("connection", (ws) => {
                createUser(ws, data.userId, wss);
                 
          }
+        if (data.message === "disconnect") {
+            logoutUser(ws, data.userId);
+        }
 
         
         
