@@ -13,3 +13,15 @@ module.exports = function getallusers(ws, data, wss, players) {
 
     });
 };
+
+module.exports = function getUser(ws, userid, wss) {
+
+    const payload = JSON.stringify({
+        message: "getuser",
+        userid: userid
+    });
+
+    ws.send(payload);
+
+    
+};
