@@ -4,6 +4,7 @@ const WebSocket = require("ws");
 const homepage = require("./home.js");
 const createUser = require("./createuser.js");
 const logoutUser = require("./logout.js");
+const getUser = require("./getuser.js");
 
 const app = express();
 
@@ -47,6 +48,10 @@ wss.on("connection", (ws) => {
                 
             }
         }
+        if (data.message === "getuser") {
+               getUser(ws, data.userId, wss);
+                
+         }
 
         
         
