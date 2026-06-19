@@ -49,8 +49,10 @@ wss.on("connection", (ws) => {
             }
         }
         if (data.message === "getuser") {
-               getUser(ws, data.userId, wss);
-                
+               //getUser(ws, data.userId, wss);
+                ws.send(JSON.stringify({
+                    message: "getuser",
+                }));
          }
 
         
