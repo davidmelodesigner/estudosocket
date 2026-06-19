@@ -3,6 +3,7 @@ const http = require("http");
 const WebSocket = require("ws");
 const homepage = require("./home.js");
 const createUser = require("./createuser.js");
+const logoutUser = require("./logout.js");
 
 const app = express();
 
