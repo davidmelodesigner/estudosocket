@@ -57,7 +57,8 @@ wss.on("connection", (ws) => {
         // PING
         // -------------------------
         if (data.message === "ping") {
-
+            ws.userId=data.userId
+            if (!players[ws.userId]) return;
             if (players[ws.userId]) {
                 players[ws.userId].lastSeen = Date.now();
             }
@@ -104,7 +105,7 @@ wss.on("connection", (ws) => {
 // SNAPSHOT
 // -------------------------
 setInterval(() => {
-
+    if (players==[]) return;
     const snapshot = {
         message: "snapshot",
         players: Object.values(players)
