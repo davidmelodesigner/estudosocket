@@ -43,7 +43,7 @@ wss.on("connection", (ws) => {
         // UPDATE
         // -------------------------
         if (data.message === "updateplayer") {
-
+            ws.userId=data.userId
             if (!players[ws.userId]) return;
         
             players[ws.userId] = {
