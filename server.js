@@ -100,7 +100,41 @@ wss.on("connection", (ws) => {
     });
 });
 
+// -------------------------
+// SNAPSHOT
+// -------------------------
+setInterval(() => {
 
+    const snapshot = {
+        message: "receiveusers",
+        players: Object.values(players)
+    };
+
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(JSON.stringify(snapshot));
+        }
+    });
+
+}, 50);
+
+
+// -------------------------
+// GHOST CLEANER
+// -------------------------
+setInterval(() => {
+
+    const now = Date.now();
+    const timeout = 5000;
+
+    for (const id in players) {
+
+        if (now - players[id].lastSeen > timeout) {
+            delete players[id];
+        }
+    }
+
+}, 2000);
 // -------------------------
 server.listen(process.env.PORT || 3000, () => {
     console.log("SERVER ONLINE");
