@@ -44,8 +44,6 @@ wss.on("connection", (ws) => {
         // -------------------------
         if (data.message === "updateplayer") {
             
-            if (!data.userId) return;
-        
             players[data.userId] = {
                 ...players[data.userId],
                 ...data,          // <- pega tudo que vier do client
@@ -58,7 +56,6 @@ wss.on("connection", (ws) => {
         // -------------------------
         if (data.message === "ping") {
             
-            if (!data.userId) return;
             if (players[data.userId]) {
                 players[data.userId].lastSeen = Date.now();
             }
