@@ -106,7 +106,7 @@ wss.on("connection", (ws) => {
 setInterval(() => {
 
     const snapshot = {
-        message: "receiveusers",
+        message: "snapshot",
         players: Object.values(players)
     };
 
