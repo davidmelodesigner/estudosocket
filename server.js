@@ -126,7 +126,7 @@ setInterval(() => {
 setInterval(() => {
 
     const now = Date.now();
-    const timeout = 5000;
+    const timeout = 20000;
 
     for (const id in players) {
 
