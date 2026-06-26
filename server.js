@@ -26,9 +26,17 @@ wss.on("connection", (ws) => {
         ws.userId=data.nameId+randomnum
 
         if(data.message=="startserver"){
+            
+            players[ws.userId] = {
+                id: ws.userId,
+                ws: ws, // 🔥 importante: rastrear socket
+                x: 0, y: 0, z: 0,
+                rx: 0, ry: 0, rz: 0,
+                lastSeen: Date.now()
+            };
             ws.send(JSON.stringify({
                     message: "connected",
-                    userId: ws.userId
+                    data: players[ws.userId]
                 }));
         }
 
