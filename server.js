@@ -24,13 +24,7 @@ wss.on("connection", (ws) => {
 
     ws.on("message", (msg) => {
 
-        let data;
-
-        try {
-            data = JSON.parse(msg.toString());
-        } catch (e) {
-            return;
-        }
+        data = JSON.parse(msg.toString());
 
         if (data.message === "startserver") {
 
