@@ -38,7 +38,27 @@ wss.on("connection", (ws) => {
                     player: players[ws.userId]
                 }));
         }
-
+        if (data.message === "updateplayer") {
+            
+                const id = data.userId; // vindo do client
+            
+                // segurança básica: só aceita se existir
+                if (!players[id]) return;
+            
+                const p = players[id];
+            
+                p.x = data.x;
+                p.y = data.y;
+                p.z = data.z;
+            
+                p.rx = data.rx;
+                p.ry = data.ry;
+                p.rz = data.rz;
+            
+                p.power = data.power;
+            
+                p.lastSeen = Date.now();
+            }
        
     });
 
