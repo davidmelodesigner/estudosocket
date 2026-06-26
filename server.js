@@ -36,7 +36,7 @@ wss.on("connection", (ws) => {
             };
             ws.send(JSON.stringify({
                     message: "connected",
-                    data: players[ws.userId]
+                    player: players[ws.userId]
                 }));
         }
 
