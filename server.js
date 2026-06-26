@@ -44,34 +44,39 @@ wss.on("connection", (ws) => {
 
         let data;
 
-        try {
-            data = JSON.parse(msg);
-        } catch (e) {
+    try {
+        data = JSON.parse(msg);
+    } catch (e) {
+        return;
+    }
+
+        if (!ws.userId) {
+    
+            if (data.message === "startserver") {
+    
+                let id = resolveId(data.id || createId());
+    
+                ws.userId = id;
+    
+                players[id] = {
+                    id,
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    rx: 0,
+                    ry: 0,
+                    rz: 0,
+                    powerpich: 0.4,
+                    lastSeen: Date.now()
+                };
+    
+                ws.send(JSON.stringify({
+                    message: "connected",
+                    id
+                }));
+            }
+    
             return;
-        }
-
-        if (data.message === "startserver") {
-
-            let id = resolveId(data.id || createId());
-
-            ws.userId = id;
-
-            players[id] = {
-                id,
-                x: 0,
-                y: 0,
-                z: 0,
-                rx: 0,
-                ry: 0,
-                rz: 0,
-                powerpich: 0.4,
-                lastSeen: Date.now()
-            };
-
-            ws.send(JSON.stringify({
-                message: "connected",
-                id
-            }));
         }
 
         if (data.message === "updateplayer") {
