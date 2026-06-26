@@ -72,7 +72,7 @@ wss.on("connection", (ws) => {
                     if (client.readyState !== 1) return;
             
                     client.send(JSON.stringify({
-                        message: "remove",
+                        message: "quitgame",
                         userId: id
                     }));
                 });
