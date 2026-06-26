@@ -97,26 +97,16 @@ wss.on("connection", (ws) => {
 
 setInterval(() => {
 
-    wss.clients.forEach(ws => {
+    wss.clients.forEach(client => {
 
-        if (ws.readyState !== WebSocket.OPEN)
-            return;
+        if (client.readyState !== WebSocket.OPEN) return;
 
-        const lista = [];
-
-        for (const id in players) {
-
-            if (id === ws.userId)
-                continue;
-
-            lista.push(players[id]);
-        }
-
-        ws.send(JSON.stringify({
+        const snapshot = {
             message: "snapshot",
-            players: lista
-        }));
+            players: Object.values(players).filter(p => p.id !== client.userId)
+        };
 
+        client.send(JSON.stringify(snapshot));
     });
 
 }, 50);
