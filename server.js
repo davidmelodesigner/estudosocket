@@ -55,7 +55,6 @@ wss.on("connection", (ws) => {
         if (data.message === "updateplayer") {
 
             const p = players[ws.userId];
-
             if (!p) return;
 
             p.x = data.x;
@@ -73,37 +72,42 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
 
-        delete players[ws.userId];
+        const id = ws.userId;
+
+        delete players[id];
 
         const remove = JSON.stringify({
             message: "remove",
-            userId: ws.userId
+            id: id
         });
 
         wss.clients.forEach(client => {
-
-            if (
-                client.readyState === WebSocket.OPEN &&
-                client !== ws
-            ) {
+            if (client.readyState === WebSocket.OPEN) {
                 client.send(remove);
             }
-
         });
 
     });
 
+    // 🔥 FIX: link explícito do client com id (IMPORTANTE)
+    ws.isAlive = true;
+    ws.on("pong", () => ws.isAlive = true);
 });
 
+// -------------------------
+// SNAPSHOT CORRIGIDO
+// -------------------------
 setInterval(() => {
 
     wss.clients.forEach(client => {
 
         if (client.readyState !== WebSocket.OPEN) return;
 
+        const myId = client.userId;
+
         const snapshot = {
             message: "snapshot",
-            players: Object.values(players).filter(p => p.id !== client.userId)
+            players: Object.values(players).filter(p => p.id !== myId)
         };
 
         client.send(JSON.stringify(snapshot));
@@ -111,6 +115,9 @@ setInterval(() => {
 
 }, 50);
 
+// -------------------------
+// CLEANER (MELHORADO)
+// -------------------------
 setInterval(() => {
 
     const now = Date.now();
@@ -123,21 +130,20 @@ setInterval(() => {
 
             const remove = JSON.stringify({
                 message: "remove",
-                userId: id
+                id
             });
 
             wss.clients.forEach(client => {
-
                 if (client.readyState === WebSocket.OPEN) {
                     client.send(remove);
                 }
-
             });
         }
     }
 
 }, 2000);
 
+// -------------------------
 server.listen(process.env.PORT || 3000, () => {
     console.log("SERVER ONLINE");
 });
