@@ -21,26 +21,24 @@ function createId() {
     );
 }
 
+function resolveId(id) {
+
+    if (!players[id]) return id;
+
+    let i = 1;
+    let newId = id + "_" + i;
+
+    while (players[newId]) {
+        i++;
+        newId = id + "_" + i;
+    }
+
+    return newId;
+}
+
 wss.on("connection", (ws) => {
 
-    ws.userId = createId();
-
-    players[ws.userId] = {
-        id: ws.userId,
-        x: 0,
-        y: 0,
-        z: 0,
-        rx: 0,
-        ry: 0,
-        rz: 0,
-        powerpich: 0.4,
-        lastSeen: Date.now()
-    };
-
-    ws.send(JSON.stringify({
-        message: "connected",
-        id: ws.userId
-    }));
+    ws.userId = null;
 
     ws.on("message", (msg) => {
 
@@ -52,9 +50,34 @@ wss.on("connection", (ws) => {
             return;
         }
 
+        if (data.message === "startserver") {
+
+            let id = resolveId(data.id || createId());
+
+            ws.userId = id;
+
+            players[id] = {
+                id,
+                x: 0,
+                y: 0,
+                z: 0,
+                rx: 0,
+                ry: 0,
+                rz: 0,
+                powerpich: 0.4,
+                lastSeen: Date.now()
+            };
+
+            ws.send(JSON.stringify({
+                message: "connected",
+                id
+            }));
+        }
+
         if (data.message === "updateplayer") {
 
-            const p = players[ws.userId];
+            const id = ws.userId;
+            const p = players[id];
             if (!p) return;
 
             p.x = data.x;
@@ -74,11 +97,13 @@ wss.on("connection", (ws) => {
 
         const id = ws.userId;
 
+        if (!id) return;
+
         delete players[id];
 
         const remove = JSON.stringify({
             message: "remove",
-            id: id
+            id
         });
 
         wss.clients.forEach(client => {
@@ -86,17 +111,9 @@ wss.on("connection", (ws) => {
                 client.send(remove);
             }
         });
-
     });
-
-    // 🔥 FIX: link explícito do client com id (IMPORTANTE)
-    ws.isAlive = true;
-    ws.on("pong", () => ws.isAlive = true);
 });
 
-// -------------------------
-// SNAPSHOT CORRIGIDO
-// -------------------------
 setInterval(() => {
 
     wss.clients.forEach(client => {
@@ -115,9 +132,6 @@ setInterval(() => {
 
 }, 50);
 
-// -------------------------
-// CLEANER (MELHORADO)
-// -------------------------
 setInterval(() => {
 
     const now = Date.now();
@@ -143,7 +157,6 @@ setInterval(() => {
 
 }, 2000);
 
-// -------------------------
 server.listen(process.env.PORT || 3000, () => {
     console.log("SERVER ONLINE");
 });
