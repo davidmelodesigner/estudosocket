@@ -14,126 +14,141 @@ const wss = new WebSocket.Server({ server });
 
 const players = {};
 
-// -------------------------
-// CONNECTION
-// -------------------------
+function createId() {
+    return Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9);
+}
+
 wss.on("connection", (ws) => {
 
-    ws.userId = Math.random().toString(36).substr(2, 9);
-
-    players[ws.userId] = {
-        id: ws.userId,
-        x: 0, y: 0, z: 0,
-        rx: 0, ry: 0, rz: 0,
-        lastSeen: Date.now()
-    };
+    ws.userId = null;
 
     ws.on("message", (msg) => {
 
-        const data = JSON.parse(msg.toString());
+        let data;
 
-        // -------------------------
-        // START
-        // -------------------------
+        try {
+            data = JSON.parse(msg.toString());
+        } catch (e) {
+            return;
+        }
+
         if (data.message === "startserver") {
+
+            const id = (data.id || createId()) + "_" + Math.random().toString(36).substr(2, 5);
+
+            ws.userId = id;
+
+            players[id] = {
+                id,
+                x: 0,
+                y: 0,
+                z: 0,
+                rx: 0,
+                ry: 0,
+                rz: 0,
+                powerpich: 0.4,
+                lastSeen: Date.now()
+            };
 
             ws.send(JSON.stringify({
                 message: "connected",
-                id: ws.userId
+                id
             }));
         }
 
-        // -------------------------
-        // UPDATE
-        // -------------------------
         if (data.message === "updateplayer") {
 
-            if (!players[ws.userId]) return;
+            const id = ws.userId;
+            const p = players[id];
+            if (!p) return;
 
-            players[ws.userId].x = data.x;
-            players[ws.userId].y = data.y;
-            players[ws.userId].z = data.z;
-            players[ws.userId].rx = data.rx;
-            players[ws.userId].ry = data.ry;
-            players[ws.userId].rz = data.rz;
-            players[ws.userId].lastSeen = Date.now();
+            p.x = data.x;
+            p.y = data.y;
+            p.z = data.z;
+
+            p.rx = data.rx;
+            p.ry = data.ry;
+            p.rz = data.rz;
+
+            p.powerpich = data.powerpich;
+            p.lastSeen = Date.now();
         }
 
-        // -------------------------
-        // PING
-        // -------------------------
         if (data.message === "ping") {
-
             if (players[ws.userId]) {
                 players[ws.userId].lastSeen = Date.now();
             }
         }
 
-        // -------------------------
-        // DISCONNECT MANUAL
-        // -------------------------
         if (data.message === "disconnect") {
 
             const id = ws.userId;
-        
+
+            if (!id) return;
+
             delete players[id];
-        
+
             wss.clients.forEach(client => {
-        
-                if (client.readyState !== 1) return;
-        
-                client.send(JSON.stringify({
-                    message: "remove",
-                    userId: id
-                }));
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({
+                        message: "remove",
+                        id
+                    }));
+                }
             });
         }
     });
 
     ws.on("close", () => {
-        delete players[ws.userId];
+
+        const id = ws.userId;
+
+        if (!id) return;
+
+        delete players[id];
+
+        wss.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                    message: "remove",
+                    id
+                }));
+            }
+        });
     });
 });
 
-
-// -------------------------
-// SNAPSHOT
-// -------------------------
 setInterval(() => {
 
-    const snapshot = {
-        message: "snapshot",
-        players: Object.values(players)
-    };
-
     wss.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify(snapshot));
-        }
+
+        if (client.readyState !== WebSocket.OPEN) return;
+
+        const myId = client.userId;
+
+        const snapshot = {
+            message: "snapshot",
+            players: Object.values(players).filter(p => p && p.id !== myId)
+        };
+
+        client.send(JSON.stringify(snapshot));
     });
 
 }, 50);
 
-
-// -------------------------
-// GHOST CLEANER
-// -------------------------
 setInterval(() => {
 
     const now = Date.now();
-    const timeout = 5000;
 
     for (const id in players) {
 
-        if (now - players[id].lastSeen > timeout) {
+        if (now - players[id].lastSeen > 5000) {
             delete players[id];
         }
     }
 
 }, 2000);
 
-
-// -------------------------
 server.listen(process.env.PORT || 3000, () => {
     console.log("SERVER ONLINE");
 });
