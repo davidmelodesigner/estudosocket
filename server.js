@@ -63,20 +63,21 @@ wss.on("connection", (ws) => {
             }
             if (data.message === "disconnect") {
 
-                const id = ws.userId;
-            
-                delete players[id];
-            
-                wss.clients.forEach(client => {
-            
-                    if (client.readyState !== 1) return;
-            
-                    client.send(JSON.stringify({
-                        message: "quitgame",
-                        userId: id
-                    }));
-                });
-            }
+                    const id = ws.userId;
+                    if (!players[id]) return;
+                    delete players[id];
+                
+                    console.log("PLAYER REMOVED:", id);
+                    wss.clients.forEach(client => {
+                
+                        if (client.readyState !== 1) return;
+                
+                        client.send(JSON.stringify({
+                            message: "quitgame",
+                            userId: id
+                        }));
+                    });
+                }
 
        
     });
