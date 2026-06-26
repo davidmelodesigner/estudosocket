@@ -19,10 +19,11 @@ const players = {};
 // -------------------------
 wss.on("connection", (ws) => {
 
-    ws.userId = Math.random().toString(36).substr(2, 9);
+    randomnum = Math.random().toString(36).substr(2, 9);
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
+        ws.userId=data.nameId+randomnum
 
         if(data.message=="startserver"){
             ws.send(JSON.stringify({
