@@ -111,9 +111,16 @@ wss.on("connection", (ws) => {
 // -------------------------
 setInterval(() => {
 
+    const unique = new Map();
+
+    for (const p of Object.values(players)) {
+        if (!p || !p.id) continue;
+        unique.set(p.id, p);
+    }
+
     const snapshot = {
         message: "snapshot",
-        players: Object.values(players)
+        players: Array.from(unique.values())
     };
 
     wss.clients.forEach(client => {
