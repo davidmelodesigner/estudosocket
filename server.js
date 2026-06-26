@@ -29,19 +29,29 @@ wss.on("connection", (ws) => {
         // START
         // -------------------------
         if (data.message === "startserver") {
-            ws.userId = Math.random().toString(36).substr(2, 9);
 
-            players[ws.userId] = {
-                id: ws.userId,
-                x: 0, y: 0, z: 0,
-                rx: 0, ry: 0, rz: 0,
-                lastSeen: Date.now()
-            };
-            ws.send(JSON.stringify({
-                message: "connected",
-                id: data.userId+"_"+ws.userId
-            }));
-        }
+                // 🔒 impede duplicar player no mesmo socket
+                if (ws.userId && players[ws.userId]) return;
+            
+                const id = data.userId || Math.random().toString(36).substr(2, 9);
+            
+                ws.userId = id;
+            
+                // 🔒 cria 1 vez só
+                if (!players[id]) {
+                    players[id] = {
+                        id,
+                        x: 0, y: 0, z: 0,
+                        rx: 0, ry: 0, rz: 0,
+                        lastSeen: Date.now()
+                    };
+                }
+            
+                ws.send(JSON.stringify({
+                    message: "connected",
+                    id
+                }));
+            }
 
         // -------------------------
         // UPDATE
