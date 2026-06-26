@@ -59,6 +59,23 @@ wss.on("connection", (ws) => {
             
                 p.lastSeen = Date.now();
             }
+            if (data.message === "disconnect") {
+
+                const id = ws.userId;
+            
+                delete players[id];
+            
+                wss.clients.forEach(client => {
+            
+                    if (client.readyState !== 1) return;
+            
+                    client.send(JSON.stringify({
+                        message: "remove",
+                        userId: id
+                    }));
+                });
+            }
+
        
     });
 
@@ -88,8 +105,7 @@ setInterval(() => {
             power: p.power || 0
         });
     }
-
-    const data = JSON.stringify(snapshot);
+   const data = JSON.stringify(snapshot);
 
     wss.clients.forEach(client => {
         if (client.readyState === 1) {
@@ -98,6 +114,19 @@ setInterval(() => {
     });
 
 }, 50);
+setInterval(() => {
+
+    const now = Date.now();
+    const timeout = 5000;
+
+    for (const id in players) {
+
+        if (now - players[id].lastSeen > timeout) {
+            delete players[id];
+        }
+    }
+
+}, 2000);
 
 
 // -------------------------
