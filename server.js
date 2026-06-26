@@ -12,49 +12,126 @@ app.get("/", (req, res) => {
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+const players = {};
+
+// -------------------------
+// CONNECTION
+// -------------------------
 wss.on("connection", (ws) => {
 
-    console.log("CLIENT CONNECTED");
+    ws.userId = Math.random().toString(36).substr(2, 9);
 
-    // avisa o cliente que conectou
-    ws.send(JSON.stringify({
-        message: "connected"
-    }));
+    players[ws.userId] = {
+        id: ws.userId,
+        x: 0, y: 0, z: 0,
+        rx: 0, ry: 0, rz: 0,
+        lastSeen: Date.now()
+    };
 
     ws.on("message", (msg) => {
 
-        let data;
+        const data = JSON.parse(msg.toString());
 
-        try {
-            data = JSON.parse(msg.toString());
-        } catch (e) {
-            console.log("JSON INVALID");
-            return;
-        }
-
-        console.log("RECEIVED:", data);
-
-        if (data.message === "test") {
+        // -------------------------
+        // START
+        // -------------------------
+        if (data.message === "startserver") {
 
             ws.send(JSON.stringify({
-                message: "echo",
-                text: data.text
+                message: "connected",
+                id: ws.userId
             }));
-
         }
 
+        // -------------------------
+        // UPDATE
+        // -------------------------
+        if (data.message === "updateplayer") {
+
+            if (!players[ws.userId]) return;
+        
+            players[ws.userId] = {
+                ...players[ws.userId],
+                ...data,          // <- pega tudo que vier do client
+                lastSeen: Date.now()
+            };
+        }
+
+        // -------------------------
+        // PING
+        // -------------------------
+        if (data.message === "ping") {
+
+            if (players[ws.userId]) {
+                players[ws.userId].lastSeen = Date.now();
+            }
+        }
+
+        // -------------------------
+        // DISCONNECT MANUAL
+        // -------------------------
+        if (data.message === "disconnect") {
+
+            const id = ws.userId;
+        
+            delete players[id];
+        
+            wss.clients.forEach(client => {
+        
+                if (client.readyState !== 1) return;
+        
+                client.send(JSON.stringify({
+                    message: "remove",
+                    userId: id
+                }));
+            });
+        }
     });
 
     ws.on("close", () => {
-        console.log("CLIENT DISCONNECTED");
+        delete players[ws.userId];
     });
-
-    ws.on("error", (err) => {
-        console.log(err);
-    });
-
 });
 
+
+// -------------------------
+// SNAPSHOT
+// -------------------------
+setInterval(() => {
+
+    const snapshot = {
+        message: "snapshot",
+        players: Object.values(players)
+    };
+
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(JSON.stringify(snapshot));
+        }
+    });
+
+}, 20);
+
+
+// -------------------------
+// GHOST CLEANER
+// -------------------------
+setInterval(() => {
+
+    const now = Date.now();
+    const timeout = 5000;
+
+    for (const id in players) {
+
+        if (now - players[id].lastSeen > timeout) {
+            delete players[id];
+        }
+    }
+
+}, 2000);
+
+
+// -------------------------
 server.listen(process.env.PORT || 3000, () => {
     console.log("SERVER ONLINE");
 });
