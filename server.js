@@ -2,9 +2,6 @@ const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const homepage = require("./home.js");
-const createUser = require("./createuser.js");
-const logoutUser = require("./logout.js");
-const { getUser } = require("./getusers.js");
 
 const app = express();
 
@@ -17,91 +14,87 @@ const wss = new WebSocket.Server({ server });
 
 const players = {};
 
-// -------------------------
-// CONNECTION
-// -------------------------
+function createId() {
+    return (
+        Date.now().toString(36) +
+        Math.random().toString(36).substr(2, 6)
+    );
+}
+
 wss.on("connection", (ws) => {
+
+    ws.userId = createId();
+
+    players[ws.userId] = {
+        id: ws.userId,
+        x: 0,
+        y: 0,
+        z: 0,
+        rx: 0,
+        ry: 0,
+        rz: 0,
+        powerpich: 0.4,
+        lastSeen: Date.now()
+    };
+
+    ws.send(JSON.stringify({
+        message: "connected",
+        id: ws.userId
+    }));
 
     ws.on("message", (msg) => {
 
-        const data = JSON.parse(msg.toString());
-        const id = data.userId;
+        let data;
 
-        if (!id) return;
-
-        // -------------------------
-        // CREATE USER
-        // -------------------------
-        if (data.message === "createuser") {
-            createUser(ws, id, wss);
+        try {
+            data = JSON.parse(msg);
+        } catch (e) {
+            return;
         }
 
-        // -------------------------
-        // UPDATE PLAYER
-        // -------------------------
         if (data.message === "updateplayer") {
 
-            if (!players[id]) {
+            const p = players[ws.userId];
 
-                players[id] = {
-                    id,
-                    x: 0, y: 0, z: 0,
-                    rx: 0, ry: 0, rz: 0,
-                    lastSeen: Date.now()
-                };
+            if (!p) return;
 
-                // 🔥 envia estado atual para quem acabou de entrar
-                ws.send(JSON.stringify({
-                    message: "snapshot",
-                    players: Object.values(players)
-                }));
-            }
+            p.x = data.x;
+            p.y = data.y;
+            p.z = data.z;
 
-            players[id] = {
-                ...players[id],
-                ...data,
-                lastSeen: Date.now()
-            };
-        }
+            p.rx = data.rx;
+            p.ry = data.ry;
+            p.rz = data.rz;
 
-        // -------------------------
-        // PING
-        // -------------------------
-        if (data.message === "ping") {
-
-            if (players[id]) {
-                players[id].lastSeen = Date.now();
-            }
-        }
-
-        // -------------------------
-        // DISCONNECT
-        // -------------------------
-        if (data.message === "disconnect") {
-
-            delete players[id];
-
-            logoutUser(ws, id, wss);
-        }
-
-        // -------------------------
-        // GET USER
-        // -------------------------
-        if (data.message === "getuser") {
-            getUser(ws, id, wss);
+            p.powerpich = data.powerpich;
+            p.lastSeen = Date.now();
         }
     });
 
     ws.on("close", () => {
-        // não depende de ws.userId (evita bug)
-        // opcional: limpeza pode ser feita via ping timeout
+
+        delete players[ws.userId];
+
+        const remove = JSON.stringify({
+            message: "remove",
+            userId: ws.userId
+        });
+
+        wss.clients.forEach(client => {
+
+            if (
+                client.readyState === WebSocket.OPEN &&
+                client !== ws
+            ) {
+                client.send(remove);
+            }
+
+        });
+
     });
+
 });
 
-
-// -------------------------
-// SNAPSHOT GLOBAL
-// -------------------------
 setInterval(() => {
 
     const snapshot = {
@@ -109,33 +102,45 @@ setInterval(() => {
         players: Object.values(players)
     };
 
+    const data = JSON.stringify(snapshot);
+
     wss.clients.forEach(client => {
-        if (client.readyState === 1) {
-            client.send(JSON.stringify(snapshot));
+
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
         }
+
     });
 
 }, 50);
 
-
-// -------------------------
-// GHOST CLEANER
-// -------------------------
 setInterval(() => {
 
     const now = Date.now();
-    const timeout = 20000;
 
     for (const id in players) {
-        if (now - players[id].lastSeen > timeout) {
+
+        if (now - players[id].lastSeen > 20000) {
+
             delete players[id];
+
+            const remove = JSON.stringify({
+                message: "remove",
+                userId: id
+            });
+
+            wss.clients.forEach(client => {
+
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(remove);
+                }
+
+            });
         }
     }
 
 }, 2000);
 
-
-// -------------------------
 server.listen(process.env.PORT || 3000, () => {
     console.log("SERVER ONLINE");
 });
