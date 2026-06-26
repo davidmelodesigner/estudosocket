@@ -19,9 +19,7 @@ const players = {};
 // -------------------------
 wss.on("connection", (ws) => {
 
-    if(data.id){
-        ws.userId = data.id+"_"+Math.random().toString(36).substr(2, 9);
-    }
+    ws.userId = Math.random().toString(36).substr(2, 9);
 
     players[ws.userId] = {
         id: ws.userId,
@@ -41,7 +39,7 @@ wss.on("connection", (ws) => {
 
             ws.send(JSON.stringify({
                 message: "connected",
-                id: ws.userId
+                id: data.userId+"_"+ws.userId
             }));
         }
 
