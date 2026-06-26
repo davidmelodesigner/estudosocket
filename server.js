@@ -23,20 +23,22 @@ wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
 
         const data = JSON.parse(msg.toString());
-        ws.userId=data.nameId+randomnum
 
-        if(data.message=="startserver"){
-            
+        if (data.message === "startserver") {
+
+            ws.userId = data.nameId + randomnum;
+
             players[ws.userId] = {
                 id: ws.userId,
                 x: 0, y: 0, z: 0,
                 rx: 0, ry: 0, rz: 0,
                 lastSeen: Date.now()
             };
+
             ws.send(JSON.stringify({
-                    message: "connected",
-                    player: players[ws.userId]
-                }));
+                message: "connected",
+                player: players[ws.userId]
+            }));
         }
         if (data.message === "updateplayer") {
             
