@@ -67,7 +67,37 @@ wss.on("connection", (ws) => {
     });
 });
 
+setInterval(() => {
 
+    const snapshot = {
+        message: "snapshot",
+        players: []
+    };
+
+    for (const id in players) {
+        const p = players[id];
+
+        snapshot.players.push({
+            id: p.id,
+            x: p.x,
+            y: p.y,
+            z: p.z,
+            rx: p.rx,
+            ry: p.ry,
+            rz: p.rz,
+            power: p.power || 0
+        });
+    }
+
+    const data = JSON.stringify(snapshot);
+
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(data);
+        }
+    });
+
+}, 50);
 
 
 // -------------------------
