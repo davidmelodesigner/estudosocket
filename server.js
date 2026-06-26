@@ -14,7 +14,7 @@ const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (ws) => {
 
-    console.log("CLIENTE CONECTOU");
+    console.log("CLIENT CONNECTED");
 
     // avisa o cliente que conectou
     ws.send(JSON.stringify({
@@ -23,26 +23,34 @@ wss.on("connection", (ws) => {
 
     ws.on("message", (msg) => {
 
+        let data;
+
         try {
+            data = JSON.parse(msg.toString());
+        } catch (e) {
+            console.log("JSON INVALID");
+            return;
+        }
 
-            const data = JSON.parse(msg.toString());
+        console.log("RECEIVED:", data);
 
-            console.log("RECEBIDO:", data);
+        if (data.message === "test") {
 
-            // responde para o cliente
             ws.send(JSON.stringify({
                 message: "echo",
-                data: data
+                text: data.text
             }));
 
-        } catch (err) {
-            console.log("JSON INVÁLIDO");
         }
 
     });
 
     ws.on("close", () => {
-        console.log("CLIENTE DESCONECTOU");
+        console.log("CLIENT DISCONNECTED");
+    });
+
+    ws.on("error", (err) => {
+        console.log(err);
     });
 
 });
