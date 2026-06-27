@@ -82,26 +82,26 @@ wss.on("connection", (ws) => {
        
     });
 
-    ws.on("close", () => {
-        
-            const id = ws.userId;
-        
-            if (!players[id]) return;
-        
-            delete players[id];
-        
-            console.log("PLAYER REMOVED:", id);
-        
-            wss.clients.forEach(client => {
-        
-                if (client.readyState !== WebSocket.OPEN) return;
-        
-                client.send(JSON.stringify({
-                    message: "quitgame",
-                    userId: id
-                }));
-            });
+       ws.on("close", () => {
+    
+        const id = ws.userId;
+    
+        if (!players[id]) return;
+    
+        delete players[id];
+    
+        console.log("PLAYER REMOVED:", id);
+    
+        wss.clients.forEach(client => {
+    
+            if (client.readyState !== WebSocket.OPEN) return;
+    
+            client.send(JSON.stringify({
+                message: "quitgame",
+                userId: id
+            }));
         });
+    });
 });
 
 setInterval(() => {
