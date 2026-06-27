@@ -97,7 +97,7 @@ wss.on("connection", (ws) => {
             if (client.readyState !== WebSocket.OPEN) return;
     
             client.send(JSON.stringify({
-                message: "quitgame",
+                message: "close",
                 userId: id
             }));
         });
